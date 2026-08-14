@@ -2,3 +2,7 @@
 CLAUDE.MD
 .cursorrules
 CONTEXT.MD
+
+# Python
+.venv/
+__pycache__/
