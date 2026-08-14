@@ -72,3 +72,8 @@ with torch.no_grad():  # we're not training, so skip tracking gradients (saves m
 
 all_activations = torch.cat(all_activations, dim=0)
 print("Total token-level activation vectors collected:", all_activations.shape)
+
+# --- Save to disk: this file is Stage 1's actual output ---
+save_path = "data/activations.pt"
+torch.save(all_activations, save_path)
+print(f"Saved to {save_path}")

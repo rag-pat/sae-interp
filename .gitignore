@@ -6,3 +6,6 @@ CONTEXT.MD
 # Python
 .venv/
 __pycache__/
+
+# Collected data (large, regenerable by rerunning collect_activations.py)
+data/
