@@ -16,6 +16,13 @@ class SparseAutoencoder(nn.Module):
         return reconstruction, features
 
 
+def compute_loss(original, reconstruction, features, lambda_sparsity):
+    reconstruction_loss = torch.mean((reconstruction - original) ** 2)  # how bad the rebuild is
+    sparsity_loss = torch.mean(torch.sum(features, dim=1))              # how much is switched on
+    total_loss = reconstruction_loss + lambda_sparsity * sparsity_loss
+    return total_loss, reconstruction_loss, sparsity_loss
+
+
 if __name__ == "__main__":
     # quick sanity test with fake random data, no real activations yet
     model = SparseAutoencoder()
@@ -37,3 +44,12 @@ if __name__ == "__main__":
 
     first_batch = next(iter(dataloader))[0]
     print("One batch handed out by the DataLoader:", first_batch.shape)
+
+    # --- Try the loss on that real batch (model is still untrained, just checking it runs) ---
+    lambda_sparsity = 0.001  # placeholder, we'll tune this later
+    reconstruction, features = model(first_batch)
+    total, recon_loss, sparsity_loss = compute_loss(first_batch, reconstruction, features, lambda_sparsity)
+
+    print("\nReconstruction loss:", recon_loss.item())
+    print("Sparsity loss:", sparsity_loss.item())
+    print("Total loss:", total.item())
