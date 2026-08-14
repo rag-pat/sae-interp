@@ -67,3 +67,32 @@ torch.save({
     "sentences": text_subset,
 }, "data/activations_with_tokens.pt")
 print("Saved to data/activations_with_tokens.pt")
+
+# --- Run every token's activation through the trained autoencoder to see feature firing strengths ---
+from train_autoencoder import SparseAutoencoder
+
+print("\n--- Getting each feature's firing strength on every token ---")
+
+autoencoder = SparseAutoencoder()
+autoencoder.load_state_dict(torch.load("data/sparse_autoencoder.pt"))
+autoencoder.eval()
+
+# Note: we don't save this matrix to disk - it would be ~4.9GB (81718 tokens x 16000 features),
+# mostly zeros since the model is sparse. We compute it fresh here and only keep what we need next.
+batch_size = 512
+all_features = []
+
+with torch.no_grad():
+    for start in range(0, all_activations.shape[0], batch_size):
+        batch = all_activations[start:start + batch_size]
+        _, features = autoencoder(batch)  # only need the feature slots, not the reconstruction
+        all_features.append(features)
+
+all_features = torch.cat(all_features, dim=0)
+print("Feature firing strengths shape:", all_features.shape)
+print("Overall fraction of features active:", (all_features > 0).float().mean().item())
+
+example_index = 100
+top5 = torch.topk(all_features[example_index], k=5)
+print(f"\nToken {all_tokens[example_index]!r} - top 5 firing feature slots:", top5.indices.tolist())
+print("Their firing values:", [round(v, 3) for v in top5.values.tolist()])
