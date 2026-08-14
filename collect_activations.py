@@ -1,4 +1,5 @@
 from transformers import GPT2Tokenizer, GPT2Model
+from datasets import load_dataset
 
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 model = GPT2Model.from_pretrained("gpt2")
@@ -32,3 +33,11 @@ model(**inputs)
 print("\n--- Hook test ---")
 print("Captured activations shape:", captured["activations"].shape)
 print("First token's first 5 numbers:", captured["activations"][0, 0, :5])
+
+# --- Load a real text dataset (small, diverse Wikipedia sentences) ---
+print("\n--- Loading text dataset ---")
+dataset = load_dataset("Salesforce/wikitext", "wikitext-2-raw-v1", split="train")
+sentences = [row["text"].strip() for row in dataset if row["text"].strip()]
+print("Number of non-empty lines loaded:", len(sentences))
+print("Example line:", sentences[0])
+print("Example line:", sentences[10])
