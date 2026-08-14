@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader
 
 
 class SparseAutoencoder(nn.Module):
@@ -26,3 +27,13 @@ if __name__ == "__main__":
     print("Feature layer shape:", features.shape)
     print("Reconstruction shape:", reconstruction.shape)
     print("Fraction of features that fired (nonzero):", (features > 0).float().mean().item())
+
+    # --- Load the real activations we collected in Stage 1, and set up batching ---
+    activations = torch.load("data/activations.pt")
+    print("\nLoaded activations shape:", activations.shape)
+
+    dataset = TensorDataset(activations)
+    dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
+
+    first_batch = next(iter(dataloader))[0]
+    print("One batch handed out by the DataLoader:", first_batch.shape)
