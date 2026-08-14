@@ -53,3 +53,7 @@ if __name__ == "__main__":
     print("\nReconstruction loss:", recon_loss.item())
     print("Sparsity loss:", sparsity_loss.item())
     print("Total loss:", total.item())
+
+    # --- Set up the optimizer: the tool that will actually apply weight updates ---
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    print("\nOptimizer ready:", optimizer)
