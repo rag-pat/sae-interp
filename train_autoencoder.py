@@ -57,3 +57,31 @@ if __name__ == "__main__":
     # --- Set up the optimizer: the tool that will actually apply weight updates ---
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     print("\nOptimizer ready:", optimizer)
+
+    # --- The actual training loop: forward -> loss -> backward -> step, repeated ---
+    num_epochs = 20
+    print(f"\n--- Training for {num_epochs} epochs ---")
+
+    for epoch in range(num_epochs):
+        total_recon_loss = 0.0
+        total_active_fraction = 0.0
+        num_batches = 0
+
+        for (batch,) in dataloader:
+            reconstruction, features = model(batch)
+            loss, recon_loss, sparsity_loss = compute_loss(batch, reconstruction, features, lambda_sparsity)
+
+            optimizer.zero_grad()  # clear old gradients
+            loss.backward()        # compute how each weight should nudge
+            optimizer.step()       # apply the nudges
+
+            total_recon_loss += recon_loss.item()
+            total_active_fraction += (features > 0).float().mean().item()
+            num_batches += 1
+
+        avg_recon = total_recon_loss / num_batches
+        avg_active = total_active_fraction / num_batches
+        print(f"Epoch {epoch + 1}/{num_epochs} - reconstruction loss: {avg_recon:.4f} - fraction active: {avg_active:.4f}")
+
+    torch.save(model.state_dict(), "data/sparse_autoencoder.pt")
+    print("\nSaved trained model to data/sparse_autoencoder.pt")
