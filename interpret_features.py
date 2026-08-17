@@ -96,3 +96,40 @@ example_index = 100
 top5 = torch.topk(all_features[example_index], k=5)
 print(f"\nToken {all_tokens[example_index]!r} - top 5 firing feature slots:", top5.indices.tolist())
 print("Their firing values:", [round(v, 3) for v in top5.values.tolist()])
+
+
+def show_top_tokens(feature_index, k=20):
+    """Print a feature slot's top-k firing words and the sentence each came from."""
+    firing_values = all_features[:, feature_index]
+    top = torch.topk(firing_values, k=k)
+
+    print(f"\n=== Feature {feature_index} - top {k} firing tokens ===")
+    for value, idx in zip(top.values.tolist(), top.indices.tolist()):
+        word = all_tokens[idx].replace("Ġ", " ")  # Ġ marks "a space comes before this piece"
+        sentence = text_subset[all_sentence_indices[idx]]
+        print(f"  {value:6.3f}  {word!r:15}  ...{sentence[:70]}")
+
+
+# --- Try it on a couple of features to see what comes out ---
+show_top_tokens(14508)
+show_top_tokens(2899)
+
+
+def scan_features(feature_indices, top_n=3):
+    """Print a quick one-line summary (top words) for each feature, skipping dead ones (never fire)."""
+    for feature_index in feature_indices:
+        firing_values = all_features[:, feature_index]
+        if firing_values.max().item() == 0:
+            continue  # dead feature - never fired on anything, skip it
+
+        top = torch.topk(firing_values, k=top_n)
+        words = [all_tokens[idx].replace("Ġ", " ").strip() for idx in top.indices.tolist()]
+        print(f"Feature {feature_index:5d}: {words}")
+
+
+# --- Scan a batch of random features to skim for promising ones ---
+import random
+random.seed(0)
+sample_indices = random.sample(range(all_features.shape[1]), 150)
+print(f"\n--- Scanning {len(sample_indices)} random features ---")
+scan_features(sample_indices)
