@@ -133,3 +133,14 @@ random.seed(0)
 sample_indices = random.sample(range(all_features.shape[1]), 150)
 print(f"\n--- Scanning {len(sample_indices)} random features ---")
 scan_features(sample_indices)
+
+# --- Deep-read the promising candidates the scan turned up ---
+show_top_tokens(5409)
+show_top_tokens(11964)
+show_top_tokens(1786)
+
+# --- Scan a second, bigger batch looking for more variety (numbers, code, dates) ---
+random.seed(1)
+sample_indices_2 = random.sample(range(all_features.shape[1]), 300)
+print(f"\n--- Scanning {len(sample_indices_2)} more random features ---")
+scan_features(sample_indices_2)
