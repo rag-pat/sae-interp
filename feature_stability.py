@@ -56,3 +56,34 @@ model_features = get_model_features(f"data/sparse_autoencoder_lambda_{lambda_val
 for concept, positions in concept_positions.items():
     best_slot, avg_value = find_best_matching_slot(positions, model_features)
     print(f"{concept:20s}: best match = slot {best_slot:5d} (avg firing {avg_value:.3f})")
+
+
+def top_words_for_slot(features, feature_index, k=10):
+    firing_values = features[:, feature_index]
+    top = torch.topk(firing_values, k=k)
+    return [all_tokens[idx].replace("Ġ", " ").strip() for idx in top.indices.tolist()]
+
+
+# --- Repeat for the remaining lambda models, and deep-read each best match ---
+import json
+
+lambda_values_to_check = [0.0001, 0.0003, 0.003, 0.01, 0.03]
+stability_results = {concept: {} for concept in concept_positions}
+
+for lam in lambda_values_to_check:
+    print(f"\n=== Lambda = {lam} ===")
+    features_for_lambda = get_model_features(f"data/sparse_autoencoder_lambda_{lam}.pt")
+
+    for concept, positions in concept_positions.items():
+        best_slot, avg_value = find_best_matching_slot(positions, features_for_lambda)
+        top_words = top_words_for_slot(features_for_lambda, best_slot, k=10)
+        print(f"  {concept:20s} -> slot {best_slot:5d} (avg {avg_value:.2f}): {top_words}")
+        stability_results[concept][lam] = {
+            "slot": best_slot,
+            "avg_firing": avg_value,
+            "top_10_words": top_words,
+        }
+
+with open("data/feature_stability_results.json", "w") as f:
+    json.dump(stability_results, f, indent=2)
+print("\nSaved to data/feature_stability_results.json")
